@@ -2,6 +2,8 @@ from flask import Flask, render_template, Response
 import cv2
 import face_recognition
 import numpy as np
+from datetime import datetime
+
 app=Flask(__name__)
 camera = cv2.VideoCapture(0)
 # Load a sample picture and learn how to recognize it.
@@ -32,6 +34,21 @@ face_locations = []
 face_encodings = []
 face_names = []
 process_this_frame = True
+
+def markAttendance(name):
+    with open('Attendance.csv', 'r+') as f:
+        myDataList = f.readlines()
+
+
+        nameList = []
+        for line in myDataList:
+            entry = line.split(',')
+            nameList.append(entry[0])
+            if name not in nameList:
+                now = datetime.now()
+                dtString = now.strftime('%H:%M:%S')
+                f.writelines(f'\n{name},{dtString}')
+
 
 def gen_frames():  
     while True:
@@ -79,6 +96,7 @@ def gen_frames():
                 font = cv2.FONT_HERSHEY_DUPLEX
                 cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
+                markAttendance(name)
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
